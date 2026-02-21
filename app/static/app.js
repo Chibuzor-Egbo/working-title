@@ -1,5 +1,4 @@
 (() => {
-  const STORAGE_KEY = 'todos:v1';
   let todos = [];
 
   const els = {
@@ -11,82 +10,78 @@
     clearCompleted: document.getElementById('clear-completed'),
   };
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      todos = raw ? JSON.parse(raw) : [];
-    } catch {
-      todos = [];
+  // ---------- API helpers ----------
+  async function api(url, opts = {}) {
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+    });
+    if (res.status === 204) return null;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || res.statusText);
     }
+    return res.json();
   }
 
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }
-
-  function nextId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-
-  function addTodo(text) {
-    const t = text.trim();
-    if (!t) return;
-    todos.unshift({ id: nextId(), text: t, completed: false, createdAt: Date.now() });
-    save();
+  async function fetchTodos() {
+    todos = await api('/todos');
     render();
   }
 
-  function toggleTodo(id, completed) {
-    const t = todos.find(x => x.id === id);
-    if (t) {
-      t.completed = completed;
-      save();
-      render();
-    }
+  async function addTodo(text) {
+    const content = text.trim();
+    if (!content) return;
+    await api('/todos', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    await fetchTodos();
   }
 
-  function deleteTodo(id) {
-    todos = todos.filter(x => x.id !== id);
-    save();
-    render();
+  async function toggleTodo(id, completed) {
+    await api(`/todos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_completed: completed }),
+    });
+    await fetchTodos();
   }
 
-  function clearCompleted() {
-    const before = todos.length;
-    todos = todos.filter(x => !x.completed);
-    if (todos.length !== before) {
-      save();
-      render();
-    }
+  async function deleteTodo(id) {
+    await api(`/todos/${id}`, { method: 'DELETE' });
+    await fetchTodos();
   }
 
+  async function clearCompleted() {
+    const completed = todos.filter(t => t.is_completed);
+    await Promise.all(completed.map(t => api(`/todos/${t.id}`, { method: 'DELETE' })));
+    await fetchTodos();
+  }
+
+  // ---------- Rendering ----------
   function renderCounts() {
-    const active = todos.filter(t => !t.completed).length;
+    const active = todos.filter(t => !t.is_completed).length;
     els.count.textContent = `${active} ${active === 1 ? 'item' : 'items'}`;
   }
 
   function render() {
     els.list.innerHTML = '';
-    if (todos.length === 0) {
-      els.empty.style.display = 'block';
-    } else {
-      els.empty.style.display = 'none';
-    }
+    els.empty.style.display = todos.length === 0 ? 'block' : 'none';
 
     todos.forEach(t => {
       const li = document.createElement('li');
-      li.className = 'todo-item' + (t.completed ? ' completed' : '');
+      li.className = 'todo-item' + (t.is_completed ? ' completed' : '');
       li.dataset.id = t.id;
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.checked = t.completed;
+      checkbox.checked = t.is_completed;
       checkbox.setAttribute('aria-label', 'Mark todo complete');
       checkbox.addEventListener('change', () => toggleTodo(t.id, checkbox.checked));
 
       const text = document.createElement('span');
       text.className = 'todo-text';
-      text.textContent = t.text;
+      text.textContent = t.content;
 
       const del = document.createElement('button');
       del.className = 'delete-btn';
@@ -112,17 +107,16 @@
     renderCounts();
   }
 
-  function onSubmit(e) {
+  // ---------- Init ----------
+  async function onSubmit(e) {
     e.preventDefault();
-    addTodo(els.input.value);
+    await addTodo(els.input.value);
     els.input.value = '';
     els.input.focus();
   }
 
   function init() {
-    load();
-    render();
-
+    fetchTodos();
     els.form.addEventListener('submit', onSubmit);
     els.clearCompleted.addEventListener('click', clearCompleted);
   }
