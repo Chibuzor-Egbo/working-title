@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Todo</h1>
+    </header>
+
+    <section class="controls">
+      <form id="todo-form" autocomplete="off" aria-label="Add todo">
+        <input id="todo-input" name="todo" type="text" placeholder="What needs doing?" aria-label="Todo" />
+        <button type="submit" class="btn primary">Add</button>
+      </form>
+    </section>
+
+    <section class="list-section">
+      <ul id="todo-list" class="todo-list" aria-live="polite" aria-label="Todo list"></ul>
+      <p id="empty-state" class="empty-state">No todos yet. Add one above.</p>
+    </section>
+
+    <footer class="footer">
+      <span id="count" class="count">0 items</span>
+      <div class="actions">
+        <button id="clear-completed" class="btn subtle" type="button">Clear completed</button>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
