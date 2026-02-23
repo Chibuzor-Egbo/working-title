@@ -115,9 +115,12 @@ def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy"})
 
-
-with app.app_context():
-    db.create_all()
+# Temporarily skip DB
+try:
+    with app.app_context():
+    	db.create_all()
+except Exception as e:
+    print("Skipping DB setup:", e)
 
 if __name__ == "__main__":
     app.run(debug=True)
