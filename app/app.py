@@ -1,9 +1,18 @@
 import os
 from datetime import datetime, timezone
+import time
+from sqlalchemy import text
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 
 load_dotenv()
 
@@ -15,6 +24,27 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+# ---------------------------------------------------------------------------
+# Prometheus Metrics
+# ---------------------------------------------------------------------------
+
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "http_status"]
+)
+
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request latency",
+    ["method", "endpoint"]
+)
+
+DB_CONNECTIONS = Gauge(
+    "db_active_connections",
+    "Active database connections"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -41,6 +71,39 @@ class Todo(db.Model):
             "created_at": self.created_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
+
+def update_db_connection_gauge():
+    try:
+        result = db.session.execute(
+            text("SELECT count(*) FROM pg_stat_activity;")
+        )
+        count = result.scalar()
+        DB_CONNECTIONS.set(count)
+    except Exception:
+        pass
+
+# ---------------------------------------------------------------------------
+# Flask hooks for tracking HTTP requests  and latency automatically
+# ---------------------------------------------------------------------------  
+@app.before_request
+def start_timer():
+    request.start_time = time.time()
+
+
+@app.after_request
+def record_metrics(response):
+    resp_time = time.time() - request.start_time
+
+    endpoint = request.path
+    method = request.method
+    status = response.status_code
+
+    REQUEST_COUNT.labels(method=method, endpoint=endpoint, http_status=status).inc()
+    REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(resp_time)
+
+    update_db_connection_gauge()
+
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -114,6 +177,10 @@ def delete_todo(todo_id):
 def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy"})
+
+@app.route("/metrics")
+def metrics():
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 # Temporarily skip DB
 try:
