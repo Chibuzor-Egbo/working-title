@@ -94,7 +94,7 @@ def start_timer():
 def record_metrics(response):
     resp_time = time.time() - request.start_time
 
-    endpoint = request.path
+    endpoint = request.url_rule.rule if request.url_rule else request.path
     method = request.method
     status = response.status_code
 
