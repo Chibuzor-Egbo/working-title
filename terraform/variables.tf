@@ -49,3 +49,20 @@ variable "az2" {
   description = "Availability zone for the first DB subnet"
   type        = string
 }
+
+# Compute (App) Variables
+
+# variable "ami_id" {
+#   description = "AMI ID for app instance"
+#   type = string
+# }
+
+variable "instance_type" {
+  description = "Instance type for app instance"
+  type        = string
+}
+
+variable "my_ip" {
+  description = "my public IP at the time of application"
+  type        = string
+}
