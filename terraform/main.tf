@@ -16,4 +16,27 @@ module "compute" {
   subnet_id = module.networking.subnet_ids[0]
   # ami_id = var.ami_id
   instance_type = var.instance_type
+
+  depends_on = [module.networking]
+}
+
+module "database" {
+  source        = "./modules/database"
+  subnet_ids_db = module.networking.subnet_ids_db
+  vpc_id        = module.networking.vpc_id
+  app_sg        = module.compute.app_sg_id
+  db_user       = var.db_user
+  db_password   = var.db_password
+
+  depends_on = [module.compute, module.networking]
+}
+
+module "monitoring" {
+  source        = "./modules/monitoring"
+  my_ip         = var.my_ip
+  vpc_id        = module.networking.vpc_id
+  instance_type = var.instance_type
+  subnet_id     = module.networking.subnet_ids[1]
+
+  depends_on = [module.networking]
 }
