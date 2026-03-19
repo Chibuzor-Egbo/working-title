@@ -1,0 +1,11 @@
+all:
+  hosts:
+    app_server:
+      ansible_host: 100.49.48.134
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ../terraform/wt-key
+
+    monitoring_server:
+      ansible_host: 3.239.36.46
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ../terraform/mon-key
