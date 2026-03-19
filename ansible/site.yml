@@ -2,12 +2,13 @@
   become: true
   roles:
     - common
-# - hosts: app_server
-#   become: true
-#   roles:
-#     - app
 
-# - hosts: monitoring_server
-#   become: true
-#   roles:
-#     - monitoring
+- hosts: app_server
+  become: true
+  roles:
+    - app
+
+- hosts: monitoring_server
+  become: true
+  roles:
+    - monitoring

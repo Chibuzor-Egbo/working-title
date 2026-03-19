@@ -24,12 +24,6 @@
     state: started
     enabled: true
 
-- name: Create app user
-  user:
-    name: appuser
-    groups: docker
-    append: yes
-
 - name: Install AWS CLI
   apt:
     name: awscli

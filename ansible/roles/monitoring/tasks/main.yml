@@ -1,3 +1,59 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for monitoring
+- name: Create monitoring directory
+  file:
+    path: /opt/monitoring
+    state: directory
+
+#NEW
+- name: Create grafana data directory
+  file:
+    path: /opt/monitoring/grafana_data
+    state: directory
+#NEW
+
+- name: Create Prometheus config
+  copy:
+    dest: /opt/monitoring/prometheus.yml
+    content: |
+      global:
+        scrape_interval: 15s
+
+      scrape_configs:
+        - job_name: 'flask-app'
+          static_configs:
+            - targets: ['{{ app_private_ip }}:5000']
+
+- name: Create docker-compose file
+  copy:
+    dest: /opt/monitoring/docker-compose.yml
+    content: |
+      version: '3.8'
+
+      services:
+        prometheus:
+          image: prom/prometheus
+          container_name: prometheus
+          volumes:
+            - /opt/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+          ports:
+            - "9090:9090"
+          restart: always
+
+        grafana:
+          image: grafana/grafana
+          container_name: grafana
+          ports:
+            - "3000:3000"
+          volumes:
+            - /opt/monitoring/grafana_data:/var/lib/grafana
+          restart: always
+          environment:
+            GF_SECURITY_ADMIN_USER: admin
+            GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_pass }}"
+
+- name: Start monitoring stack
+  shell: docker-compose up -d
+  args:
+    chdir: /opt/monitoring
