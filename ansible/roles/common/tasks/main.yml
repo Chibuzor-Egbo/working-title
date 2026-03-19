@@ -1,3 +1,36 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for common
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Upgrade packages
+  apt:
+    upgrade: dist
+
+- name: Install required packages
+  apt:
+    name:
+      - docker.io
+      - docker-compose
+      - python3-pip
+      - unzip
+    state: present
+
+- name: Ensure Docker is running
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Create app user
+  user:
+    name: appuser
+    groups: docker
+    append: yes
+
+- name: Install AWS CLI
+  apt:
+    name: awscli
+    state: present
