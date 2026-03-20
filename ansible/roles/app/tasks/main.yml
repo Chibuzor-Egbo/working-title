@@ -25,7 +25,4 @@
       DB_PASSWORD: "{{ db_password }}"
       DB_NAME: "{{ db_name }}"
       DB_PORT: "5432"
-
-- name: Ensure DB tables exist on RDS
-  shell: |
-    docker exec flask_app python -c "from app import db; db.create_all()"
+      DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
