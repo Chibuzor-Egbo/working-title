@@ -126,4 +126,4 @@ jobs:
           ansible-playbook ansible/site.yml \
             -i ansible/inventory/dynamic_inventory.yml \
             --vault-password-file <(echo "${{ secrets.ANSIBLE_VAULT_PASS }}") \
-            --extra-vars "ecr_repo=${{ secrets.ECR_REPO_URL }} image_tag=${{ github.sha }} db_host=${{ env.DB_HOST }} app_private_ip=${{ env.APP_PRIV_IP }}"
+            --extra-vars "ecr_repo=${{ secrets.ECR_REPO_URL }} image_tag="725cbb32810d5c17e54b8f2504785c0eebfbcc7b" db_host=${{ env.DB_HOST }} app_private_ip=${{ env.APP_PRIV_IP }}"
