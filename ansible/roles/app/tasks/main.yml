@@ -4,17 +4,17 @@
 - name: Login to ECR
   shell: |
     aws ecr get-login-password --region us-east-1 \
-    | docker login --username AWS --password-stdin 162322546212.dkr.ecr.us-east-1.amazonaws.com/wt
+    | docker login --username AWS --password-stdin "{{ ecr_repo }}"
 
 - name: Pull app image
   docker_image:
-    name: "162322546212.dkr.ecr.us-east-1.amazonaws.com/wt:v1"
+    name: "{{ ecr_repo }}:{{ image_tag }}"
     source: pull
 
 - name: Run app container
   docker_container:
     name: flask_app
-    image: "162322546212.dkr.ecr.us-east-1.amazonaws.com/wt:v1"
+    image: "{{ ecr_repo }}:{{ image_tag }}"
     state: started
     restart_policy: always
     ports:

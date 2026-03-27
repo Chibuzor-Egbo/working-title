@@ -46,6 +46,7 @@ resource "aws_security_group" "app_sg" {
 
 }
 
+# IAM role for the app server
 resource "aws_iam_role" "ec2_admin_role" {
   name = "ec2-admin-role"
 
@@ -63,10 +64,14 @@ resource "aws_iam_role" "ec2_admin_role" {
   })
 }
 
+# IAM policy attached to the role for the app server
+
 resource "aws_iam_role_policy_attachment" "admin_policy" {
   role       = aws_iam_role.ec2_admin_role.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+
+#  IAM instance profile for the app server
 
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-admin-profile"
@@ -97,3 +102,74 @@ resource "aws_eip_association" "app_ip_assoc" {
   instance_id   = aws_instance.app.id
   allocation_id = aws_eip.app_ip.id
 }
+
+# ELASTIC CONTAINER REGISTRY - repo creation
+
+resource "aws_ecr_repository" "app_image_repo" {
+  name = "wt"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  force_delete = true
+}
+
+
+# Github OIDC provider
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+# IAM role for the repo that allows github actions to push images it
+
+resource "aws_iam_role" "github_actions_role" {
+  name = "github-actions-ecr-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:Chibuzor-Egbo/working_title:*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# ECR policy
+resource "aws_iam_role_policy" "ecr_policy" {
+  role = aws_iam_role.github_actions_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
