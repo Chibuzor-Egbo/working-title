@@ -116,6 +116,11 @@ jobs:
                 ansible_ssh_private_key_file: ~/.ssh/mon-key
           EOF
 
+      - name: Add EC2 hosts to known_hosts
+        run: |
+          ssh-keyscan -H ${{ env.APP_PUB_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ env.MONITORING_PUB_IP }} >> ~/.ssh/known_hosts
+
       - name: Run Ansible
         run: |
           ansible-playbook ansible/site.yml \
