@@ -115,7 +115,6 @@ resource "aws_ecr_repository" "app_image_repo" {
   force_delete = true
 }
 
-
 # Github OIDC provider
 resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
@@ -125,10 +124,10 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
-# IAM role for the repo that allows github actions to push images it
 
+# IAM role for GitHub Actions
 resource "aws_iam_role" "github_actions_role" {
-  name = "github-actions-ecr-role"
+  name = "github-actions-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -152,13 +151,33 @@ resource "aws_iam_role" "github_actions_role" {
   })
 }
 
-# ECR policy
-resource "aws_iam_role_policy" "ecr_policy" {
+# Attach combined policy for Terraform backend + ECR
+resource "aws_iam_role_policy" "github_actions_policy" {
   role = aws_iam_role.github_actions_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # S3 bucket access for Terraform state
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket/*"
+      },
+
+      # DynamoDB table access for Terraform state locking
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:UpdateItem"]
+        Resource = "arn:aws:dynamodb:us-east-1:162322546212:table/terraform-state-locks"
+      },
+
+      # ECR access for pushing Docker images
       {
         Effect = "Allow"
         Action = [
