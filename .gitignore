@@ -1,6 +1,12 @@
+*.tfstate
+*.tfstate.backup
+.terraform
+terraform.tfvars
 .env
 .venv/
 __pycache__/
 *.pyc
 .DS_Store
 instance/
+wt-key
+mon-key
