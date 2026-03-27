@@ -19,6 +19,7 @@ jobs:
       DB_HOST: ""
       APP_PRIV_IP: ""
       MONITORING_PUB_IP: ""
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -39,7 +40,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: terraform/
-        run: terraform plan -out=tfplan
+        run: terraform plan -var="db_password=${DB_PASSWORD}" -out=tfplan
 
       - name: Upload Plan
         uses: actions/upload-artifact@v4
@@ -92,5 +93,6 @@ jobs:
       - name: Run Ansible
         run: |
           ansible-playbook ansible/site.yml \
-          -i ansible/inventory/dynamic_inventory.yml \
-          --extra-vars "ecr_repo=${{ secrets.ECR_REPO_URL }} image_tag=${{ github.sha }} db_host=${{ env.DB_HOST }} app_private_ip=${{ env.APP_PRIV_IP }}"
+            -i ansible/inventory/dynamic_inventory.yml \
+            --vault-password-file <(echo "${{ secrets.ANSIBLE_VAULT_PASS }}")
+            --extra-vars "ecr_repo=${{ secrets.ECR_REPO_URL }} image_tag=${{ github.sha }} db_host=${{ env.DB_HOST }} app_private_ip=${{ env.APP_PRIV_IP }}"
