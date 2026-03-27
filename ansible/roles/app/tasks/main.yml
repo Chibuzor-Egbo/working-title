@@ -1,0 +1,28 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for app
+- name: Login to ECR
+  shell: |
+    aws ecr get-login-password --region us-east-1 \
+    | docker login --username AWS --password-stdin 162322546212.dkr.ecr.us-east-1.amazonaws.com/wt
+
+- name: Pull app image
+  docker_image:
+    name: "162322546212.dkr.ecr.us-east-1.amazonaws.com/wt:v1"
+    source: pull
+
+- name: Run app container
+  docker_container:
+    name: flask_app
+    image: "162322546212.dkr.ecr.us-east-1.amazonaws.com/wt:v1"
+    state: started
+    restart_policy: always
+    ports:
+      - "5000:5000"
+    env:
+      DB_HOST: "{{ db_host }}"
+      DB_USER: "{{ db_user }}"
+      DB_PASSWORD: "{{ db_password }}"
+      DB_NAME: "{{ db_name }}"
+      DB_PORT: "5432"
+      DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
