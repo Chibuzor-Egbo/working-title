@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -52,7 +50,7 @@ jobs:
           aws ecr get-login-password \
           | docker login --username AWS --password-stdin $ECR_REPO_URL
 
-      # 🔹 Tag + push
+      # tag and push image
       - name: Push image
         run: |
           docker tag wt:${{ github.sha }} $ECR_REPO_URL:${{ github.sha }}
