@@ -152,46 +152,52 @@ resource "aws_iam_role" "github_actions_role" {
 }
 
 # Attach combined policy for Terraform backend + ECR
-resource "aws_iam_role_policy" "github_actions_policy" {
-  role = aws_iam_role.github_actions_role.id
+# resource "aws_iam_role_policy" "github_actions_policy" {
+#   role = aws_iam_role.github_actions_role.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      # S3 bucket access for Terraform state
-      {
-        Effect   = "Allow"
-        Action   = ["s3:ListBucket"]
-        Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket"
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-        Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket/*"
-      },
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       # S3 bucket access for Terraform state
+#       {
+#         Effect   = "Allow"
+#         Action   = ["s3:ListBucket"]
+#         Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket"
+#       },
+#       {
+#         Effect   = "Allow"
+#         Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+#         Resource = "arn:aws:s3:::workingtitle-terraform-state-bucket/*"
+#       },
 
-      # DynamoDB table access for Terraform state locking
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:UpdateItem"]
-        Resource = "arn:aws:dynamodb:us-east-1:162322546212:table/terraform-state-locks"
-      },
+#       # DynamoDB table access for Terraform state locking
+#       {
+#         Effect   = "Allow"
+#         Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:UpdateItem"]
+#         Resource = "arn:aws:dynamodb:us-east-1:162322546212:table/terraform-state-locks"
+#       },
 
-      # ECR access for pushing Docker images
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:CompleteLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:InitiateLayerUpload",
-          "ecr:PutImage"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
+#       # ECR access for pushing Docker images
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "ecr:GetAuthorizationToken",
+#           "ecr:BatchCheckLayerAvailability",
+#           "ecr:CompleteLayerUpload",
+#           "ecr:UploadLayerPart",
+#           "ecr:InitiateLayerUpload",
+#           "ecr:PutImage"
+#         ]
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+
+# give admin access to github OIDC
+resource "aws_iam_role_policy_attachment" "github_admin" {
+  role = aws_iam_role.github_actions_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 
