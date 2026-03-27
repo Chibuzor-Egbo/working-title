@@ -61,6 +61,8 @@ resource "aws_security_group" "mon_sg" {
 
 }
 
+# IAM role for the monitoring server
+
 resource "aws_iam_role" "ec2_admin_role" {
   name = "ec2-admin-role-mon"
 
@@ -78,15 +80,21 @@ resource "aws_iam_role" "ec2_admin_role" {
   })
 }
 
+# IAM policy attached to the role for the monitoring server
+
 resource "aws_iam_role_policy_attachment" "admin_policy" {
   role       = aws_iam_role.ec2_admin_role.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
+#  IAM instance profile for the monitoring server
+
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-admin-profile-mon"
   role = aws_iam_role.ec2_admin_role.name
 }
+
+# monitoring server
 
 resource "aws_instance" "mon" {
   ami                  = data.aws_ami.ubuntu.id

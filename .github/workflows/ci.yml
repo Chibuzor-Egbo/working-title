@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      id-token: write # for OIDC
+      contents: read
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: pytest app/
+
+      - name: Build Docker image
+        run: |
+          docker build -t wt:${{ github.sha }} app/
+
+      # AWS OIDC config
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ECR login
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password \
+          | docker login --username AWS --password-stdin $ECR_REPO_URL
+
+      # 🔹 Tag + push
+      - name: Push image
+        run: |
+          docker tag wt:${{ github.sha }} $ECR_REPO_URL:${{ github.sha }}
+          docker push $ECR_REPO_URL:${{ github.sha }}

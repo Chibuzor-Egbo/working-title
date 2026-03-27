@@ -1,0 +1,96 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+      issues: write # important for manual approval so i can open a github issue
+
+    env:
+      AWS_REGION: us-east-1
+      APP_PUB_IP: ""
+      DB_HOST: ""
+      APP_PRIV_IP: ""
+      MONITORING_PUB_IP: ""
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: terraform/
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/
+        run: terraform plan -out=tfplan
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/tfplan
+
+      - name: Wait for approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: Chibuzor-Egbo
+
+      - name: Terraform Apply
+        working-directory: terraform/
+        run: terraform apply -auto-approve tfplan
+
+      - name: Get EC2 IP, DB_HOST, APP_PRIV_IP
+        working-directory: terraform/
+        run: |
+          echo "APP_PUB_IP=$(terraform output -raw public_ip)" >> $GITHUB_ENV
+          echo "MONITORING_PUB_IP=$(terraform output -raw mon_public_ip)" >> $GITHUB_ENV
+          echo "DB_HOST=$(terraform output -raw db_endpoint)" >> $GITHUB_ENV
+          echo "APP_PRIV_IP=$(terraform output -raw private_ip)" >> $GITHUB_ENV
+
+      - name: Setup SSH keys
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WT_KEY }}" > ~/.ssh/wt-key
+          chmod 600 ~/.ssh/wt-key
+          echo "${{ secrets.MON_KEY }}" > ~/.ssh/mon-key
+          chmod 600 ~/.ssh/mon-key
+
+      - name: Generate dynamic inventory
+        run: |
+          cat > ansible/inventory/dynamic_inventory.yml <<EOF
+          all:
+            hosts:
+              app_server:
+                ansible_host: ${{ env.APP_PUB_IP }}
+                ansible_user: ubuntu
+                ansible_ssh_private_key_file: ~/.ssh/wt-key
+
+              monitoring_server:
+                ansible_host: ${{ env.MONITORING_PUB_IP }}
+                ansible_user: ubuntu
+                ansible_ssh_private_key_file: ~/.ssh/mon-key
+          EOF
+
+      - name: Run Ansible
+        run: |
+          ansible-playbook ansible/site.yml \
+          -i ansible/inventory/dynamic_inventory.yml \
+          --extra-vars "ecr_repo=${{ secrets.ECR_REPO_URL }} image_tag=${{ github.sha }} db_host=${{ env.DB_HOST }} app_private_ip=${{ env.APP_PRIV_IP }}"
