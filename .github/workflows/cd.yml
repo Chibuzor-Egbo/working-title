@@ -24,7 +24,6 @@ jobs:
       DB_HOST: ""
       APP_PRIV_IP: ""
       MONITORING_PUB_IP: ""
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -42,6 +41,28 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/
         run: terraform init
+
+      - name: Write tfvars file
+        run: |
+          cat > terraform/terraform.tfvars <<EOF
+          aws_region  = "${{ env.AWS_REGION }}"
+          bucket_name = "${{ vars.BUCKET_NAME }}"
+          dynamodbtable_name = "${{ vars.DYNAMODBTABLE_NAME }}"
+
+          vpc_cidr = "${{ vars.VPC_CIDR }}"
+          pub1_cidr = "${{ vars.PUB1_CIDR }}"
+          pub2_cidr = "${{ vars.PUB2_CIDR }}"
+          priv1_cidr = "${{ vars.PRIV1_CIDR }}"
+          priv2_cidr = "${{ vars.PRIV2_CIDR }}"
+          az1 = "${{ vars.AZ1 }}"
+          az2 = "${{ vars.AZ2 }}"
+
+          my_ip = "${{ vars.MY_IP }}"
+          instance_type = "${{ vars.INSTANCE_TYPE }}"
+
+          db_user = "${{ vars.DB_USER }}"
+          db_password = "${{ secrets.DB_PASSWORD }}"
+          EOF
 
       - name: Terraform Plan
         working-directory: terraform/
