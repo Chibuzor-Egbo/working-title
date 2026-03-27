@@ -140,8 +140,11 @@ resource "aws_iam_role" "github_actions_role" {
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:Chibuzor-Egbo/working_title:*"
+            "token.actions.githubusercontent.com:sub" = "repo:Chibuzor-Egbo/working-title:*"
           }
         }
       }
