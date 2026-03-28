@@ -27,7 +27,7 @@ cat > trust-policy.json <<EOF
 {
 "Effect": "Allow",
 "Principal": {
-"Federated": "arn:aws:iam::<your-account-id>:oidc-provider/token.actions.githubusercontent.com"
+"Federated": "arn:aws:iam::162322546212:oidc-provider/token.actions.githubusercontent.com"
 },
 "Action": "sts:AssumeRoleWithWebIdentity",
 "Condition": {
@@ -35,7 +35,7 @@ cat > trust-policy.json <<EOF
 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
 },
 "StringLike": {
-"token.actions.githubusercontent.com:sub": "repo:<your-github-username>/<your-repo-name>:*"
+"token.actions.githubusercontent.com:sub": "repo:Chibuzor-Egbo/working-title:*"
 }
 }
 }
