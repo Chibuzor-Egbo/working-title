@@ -116,40 +116,40 @@ resource "aws_ecr_repository" "this" {
 }
 
 # Github OIDC provider
-resource "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
+# resource "aws_iam_openid_connect_provider" "github" {
+#   url = "https://token.actions.githubusercontent.com"
 
-  client_id_list = ["sts.amazonaws.com"]
+#   client_id_list = ["sts.amazonaws.com"]
 
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
-}
+#   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+# }
 
 
 # IAM role for GitHub Actions
-resource "aws_iam_role" "github_actions_role" {
-  name = "github-actions-role"
+# resource "aws_iam_role" "github_actions_role" {
+#   name = "github-actions-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = aws_iam_openid_connect_provider.github.arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:Chibuzor-Egbo/working-title:*"
-          }
-        }
-      }
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Principal = {
+#           Federated = aws_iam_openid_connect_provider.github.arn
+#         }
+#         Action = "sts:AssumeRoleWithWebIdentity"
+#         Condition = {
+#           StringEquals = {
+#             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+#           }
+#           StringLike = {
+#             "token.actions.githubusercontent.com:sub" = "repo:Chibuzor-Egbo/working-title:*"
+#           }
+#         }
+#       }
+#     ]
+#   })
+# }
 
 # Attach combined policy for Terraform backend + ECR
 # resource "aws_iam_role_policy" "github_actions_policy" {
@@ -195,9 +195,11 @@ resource "aws_iam_role" "github_actions_role" {
 # }
 
 # give admin access to github OIDC
-resource "aws_iam_role_policy_attachment" "github_admin" {
-  role = aws_iam_role.github_actions_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-}
+# resource "aws_iam_role_policy_attachment" "github_admin" {
+#   role = aws_iam_role.github_actions_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+# }
+
+# DOING IT MAUNALLY NOW
 
 
