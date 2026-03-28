@@ -3,19 +3,13 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
-    environment: dev
-    permissions:
-      id-token: write # for OIDC
-      contents: read
-
-    env:
-      AWS_REGION: us-east-1
-      ECR_REPO_URL: ${{ secrets.ECR_REPO_URL }}
-
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +26,19 @@ jobs:
 
       - name: Run tests
         run: pytest app/
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    environment: dev
+    permissions:
+      id-token: write # for OIDC
+      contents: read
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO_URL: 162322546212.dkr.ecr.us-east-1.amazonaws.com/wt
 
+    steps:
       - name: Build Docker image
         run: |
           docker build -t wt:${{ github.sha }} app/

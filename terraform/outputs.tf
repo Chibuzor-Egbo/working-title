@@ -14,10 +14,6 @@ output "app_sg_id" {
   value = module.compute.app_sg_id
 }
 
-output "ecr_repo_url" {
-  value = module.compute.ecr_repo_url
-}
-
 output "github_actions_role_arn" {
   value = module.compute.github_actions_role_arn
 }
