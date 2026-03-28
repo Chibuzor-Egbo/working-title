@@ -105,7 +105,7 @@ resource "aws_eip_association" "app_ip_assoc" {
 
 # ELASTIC CONTAINER REGISTRY - repo creation
 
-resource "aws_ecr_repository" "app_image_repo" {
+resource "aws_ecr_repository" "this" {
   name = "wt"
 
   image_scanning_configuration {
