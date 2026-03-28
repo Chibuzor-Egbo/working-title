@@ -14,10 +14,6 @@ output "app_sg_id" {
   value = module.compute.app_sg_id
 }
 
-output "github_actions_role_arn" {
-  value = module.compute.github_actions_role_arn
-}
-
 output "db_endpoint" {
   value = module.database.db_endpoint
 }

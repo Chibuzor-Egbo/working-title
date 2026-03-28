@@ -9,7 +9,3 @@ output "private_ip" {
 output "app_sg_id" {
   value = aws_security_group.app_sg.id
 }
-
-output "github_actions_role_arn" {
-  value = aws_iam_role.github_actions_role.arn
-}
