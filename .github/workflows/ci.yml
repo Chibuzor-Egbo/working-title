@@ -38,6 +38,9 @@ jobs:
       ECR_REPO_URL: 162322546212.dkr.ecr.us-east-1.amazonaws.com/wt
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Build Docker image
         run: |
           docker build -t wt:${{ github.sha }} app/
