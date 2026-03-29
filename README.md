@@ -1,6 +1,6 @@
 # working-title
 
-TBD
+NEED HUMAN LOL
 
 #1
 the repo has to be created manually
@@ -50,3 +50,6 @@ aws iam create-role \
 aws iam attach-role-policy \
  --role-name github-actions-role \
  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+
+#3
+always update your public IP in secrets
