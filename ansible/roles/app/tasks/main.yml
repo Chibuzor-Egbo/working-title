@@ -25,4 +25,6 @@
       DB_PASSWORD: "{{ db_password }}"
       DB_NAME: "{{ db_name }}"
       DB_PORT: "5432"
-      DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
+      # DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
+      DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }}"
+      # That output from aws_db_instance.postgres.endpoint already includes :5432 and was causing :5432:5432
