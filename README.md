@@ -65,3 +65,6 @@ aws iam attach-role-policy \
 always update your public IP in secrets
 
 ## GRAFANA SETUP
+
+login
+add prom as a data source "http://prometheus:9090"

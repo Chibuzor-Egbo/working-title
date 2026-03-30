@@ -3,7 +3,7 @@ output "public_ip" {
 }
 
 output "private_ip" {
-  value = aws_eip.app_ip.private_ip
+  value = aws_instance.app.private_ip
 }
 
 output "app_sg_id" {
