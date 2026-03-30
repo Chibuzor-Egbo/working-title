@@ -1,3 +1,7 @@
 #SPDX-License-Identifier: MIT-0
 ---
+- name: Restart prometheus
+  shell: docker-compose restart prometheus
+  args:
+    chdir: /opt/monitoring
 # handlers file for monitoring

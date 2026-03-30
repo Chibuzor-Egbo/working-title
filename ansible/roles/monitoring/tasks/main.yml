@@ -31,6 +31,7 @@
         - job_name: 'flask-app'
           static_configs:
             - targets: ['{{ app_private_ip }}:5000']
+  notify: Restart prometheus
 
 - name: Create docker-compose file
   copy:
