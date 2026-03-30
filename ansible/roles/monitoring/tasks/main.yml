@@ -16,6 +16,10 @@
     mode: "0755"
 #NEW
 
+- name: Debug app_private_ip
+  debug:
+    var: app_private_ip
+
 - name: Create Prometheus config
   copy:
     dest: /opt/monitoring/prometheus.yml
