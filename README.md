@@ -2,23 +2,28 @@
 
 NEED HUMAN LOL
 
-#1
+## 1
+
 the repo has to be created manually
-aws ecr create-repository --repository-name wt --region us-east-1
 
-# enable terraform still manage the repo even after manual creation
+`aws ecr create-repository --repository-name wt --region us-east-1`
 
-terraform import aws_ecr_repository.this wt
+enable terraform still manage the repo even after manual creation
 
-#2
+`terraform import module.compute.aws_ecr_repository.this wt`
+
+## 2
+
 the github actions role has to be created manually
 
+```setting up OIDC provider
 aws iam create-open-id-connect-provider \
  --url https://token.actions.githubusercontent.com \
  --client-id-list sts.amazonaws.com \
  --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+```
 
-# incase u dont have the policy
+#### incase u dont have the policy
 
 cat > trust-policy.json <<EOF
 {
@@ -43,13 +48,20 @@ cat > trust-policy.json <<EOF
 }
 EOF
 
+```role creation
 aws iam create-role \
  --role-name github-actions-role \
  --assume-role-policy-document file://trust-policy.json
+```
 
+```attach permissions to role
 aws iam attach-role-policy \
  --role-name github-actions-role \
  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+```
 
-#3
+## 3
+
 always update your public IP in secrets
+
+## GRAFANA SETUP
