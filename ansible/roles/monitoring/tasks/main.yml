@@ -34,8 +34,8 @@
       alerting:
         alertmanagers:
           - static_configs:
-            - targets:
-              - alertmanager:9093
+              - targets:
+                  - alertmanager:9093
 
       scrape_configs:
         - job_name: "flask-app"
@@ -85,6 +85,7 @@
           container_name: prometheus
           volumes:
             - /opt/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - /opt/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
           ports:
             - "9090:9090"
           restart: always
@@ -105,12 +106,38 @@
             - "3000:3000"
           volumes:
             - /opt/monitoring/grafana_data:/var/lib/grafana
+            - /opt/monitoring/grafana/provisioning:/etc/grafana/provisioning        
+            - /opt/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
           restart: always
           environment:
             GF_SECURITY_ADMIN_USER: admin
             GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_pass }}"
 
+- name: Create grafana provisioning directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /opt/monitoring/grafana/provisioning/dashboards
+    - /opt/monitoring/grafana/provisioning/datasources
+    - /opt/monitoring/grafana/dashboards
+
+- name: Copy dashboard provisioning config
+  copy:
+    src: grafana/provisioning/dashboards/dashboards.yml
+    dest: /opt/monitoring/grafana/provisioning/dashboards/dashboards.yml
+
+- name: Copy datasource provisioning config
+  copy:
+    src: grafana/provisioning/datasources/datasources.yml
+    dest: /opt/monitoring/grafana/provisioning/datasources/datasources.yml
+
+- name: Copy Grafana dashboard JSON
+  copy:
+    src: grafana/dashboards/flask_app_overview.json
+    dest: /opt/monitoring/grafana/dashboards/working_title_dashboard-1774916854011.json
+
 - name: Start monitoring stack
-  shell: docker-compose up -d
+  shell: docker-compose up -d --force-recreate
   args:
     chdir: /opt/monitoring
