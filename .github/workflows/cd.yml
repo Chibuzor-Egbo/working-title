@@ -126,4 +126,4 @@ jobs:
           ansible-playbook ansible/site.yml \
             -i ansible/inventory/dynamic_inventory.yml \
             --vault-password-file <(echo "${{ secrets.ANSIBLE_VAULT_PASS }}") \
-            --extra-vars "ecr_repo='162322546212.dkr.ecr.us-east-1.amazonaws.com/wt' image_tag=${{ github.sha }} db_host=$DB_HOST app_private_ip=$APP_PRIV_IP"
+            --extra-vars "ecr_repo='162322546212.dkr.ecr.us-east-1.amazonaws.com/wt' image_tag=${{ github.sha }} db_host=$DB_HOST app_private_ip=$APP_PRIV_IP slack_webhook_url=${{ secrets.SLACK_WEBHOOK_URL }}"
