@@ -137,7 +137,13 @@
     src: grafana/dashboards/working_title_dashboard-1774916854011.json
     dest: /opt/monitoring/grafana/dashboards/working_title_dashboard-1774916854011.json
 
+- name: Stop monitoring stack
+  shell: docker-compose down
+  args:
+    chdir: /opt/monitoring
+  ignore_errors: true # won't fail if containers don't exist yet on first run
+
 - name: Start monitoring stack
-  shell: docker-compose up -d --force-recreate
+  shell: docker-compose up -d
   args:
     chdir: /opt/monitoring
