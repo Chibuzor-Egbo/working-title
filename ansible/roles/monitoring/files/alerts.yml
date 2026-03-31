@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT-0
+groups:
+  - name: flask_app_alerts
+    rules:
+      # Rule 1: App is down (no scrape data for > 1 minute)
+      - alert: AppDown
+        expr: up{job="flask-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask app is down"
+          description: >
+            The Flask app at {{ $labels.instance }} has been unreachable
+            for more than 1 minute. Prometheus cannot scrape /metrics.
+            Check that the app container is running and port 5000 is accessible.
+
+      # Rule 2: Error rate exceeds 5% over a 2-minute window
+      - alert: HighErrorRate
+        expr: >
+          (
+            sum(rate(http_requests_total{http_status=~"5.."}[2m]))
+            /
+            sum(rate(http_requests_total[2m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate detected"
+          description: >
+            The 5xx error rate has exceeded 5% over the last 2 minutes.
+            Current value: {{ printf "%.2f" $value }}%.
+            Check app logs for exceptions or database connectivity issues.
+
+---
