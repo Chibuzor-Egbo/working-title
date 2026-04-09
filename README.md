@@ -68,3 +68,5 @@ always update your public IP in secrets
 
 login
 add prom as a data source "http://prometheus:9090"
+
+for loom video
